@@ -263,7 +263,3 @@ def api_upload():
     f.save(save_path)
     return jsonify(ok=True, filename=f.filename, path=save_path)
 
-# ───────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    # In production, serve via gunicorn/uvicorn, not Flask dev server.
-    app.run(host="0.0.0.0", port=5000, debug=True)
