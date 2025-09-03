@@ -1,0 +1,118 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Structure Homes AI{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .gradient-bg{ background:linear-gradient(135deg,#6e8efb 0%,#a777e3 100%); }
+    .hero-image{ background-size:cover; background-position:center; background-blend-mode:overlay; background-color:rgba(0,0,0,.3);}
+    .file-drop-area{ border:2px dashed #a777e3; transition:all .3s ease;}
+    .file-drop-area.active{ border-color:#6e8efb; background-color:rgba(110,142,251,.1);}
+    .glow{ box-shadow:0 0 15px rgba(167,119,227,.5);}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="font-sans antialiased text-gray-800">
+  <!-- Nav -->
+  <nav class="bg-white shadow-sm fixed w-full z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 flex items-center">
+            <i class="fas fa-cube text-purple-600 text-2xl mr-2"></i>
+            <a href="{{ url_for('landing') }}" class="text-xl font-bold text-gray-900">Structure Homes</a>
+          </div>
+          <div class="hidden sm:ml-8 sm:flex sm:items-center sm:space-x-8">
+            <a href="{{ url_for('landing') }}#features" class="text-gray-900 hover:text-purple-600 px-3 py-2 text-sm font-medium">Features</a>
+            <a href="{{ url_for('landing') }}#how-it-works" class="text-gray-900 hover:text-purple-600 px-3 py-2 text-sm font-medium">How It Works</a>
+            <a href="{{ url_for('landing') }}#pricing" class="text-gray-900 hover:text-purple-600 px-3 py-2 text-sm font-medium">Pricing</a>
+          </div>
+        </div>
+
+        <div class="hidden sm:ml-6 sm:flex sm:items-center">
+          {% if current_user %}
+            <a href="{{ url_for('demo') }}"
+               class="ml-4 inline-flex items-center px-3 py-2 rounded-md text-white gradient-bg hover:opacity-90">
+              Go to Demo
+            </a>
+            <div id="user-badge" class="ml-4 text-sm text-gray-700">
+              <span class="font-semibold">{{ current_user.username }}</span>
+              • <span id="tokens-remaining">{{ current_user.tokens_remaining }}</span> runs left
+            </div>
+            <a href="{{ url_for('logout') }}" class="ml-4 text-sm text-purple-700 hover:underline">Logout</a>
+          {% else %}
+            <a href="{{ url_for('login') }}"
+               class="ml-8 inline-flex items-center px-4 py-2 rounded-md text-white gradient-bg hover:opacity-90">
+              Log in
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- Mobile -->
+        <div class="-mr-2 flex items-center sm:hidden">
+          <button type="button" id="mobile-menu-button"
+                  class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none">
+            <span class="sr-only">Open main menu</span>
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden sm:hidden" id="mobile-menu">
+      <div class="pt-2 pb-3 space-y-1">
+        <a href="{{ url_for('landing') }}#features" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-purple-600 hover:bg-gray-50">Features</a>
+        <a href="{{ url_for('landing') }}#how-it-works" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-purple-600 hover:bg-gray-50">How It Works</a>
+        <a href="{{ url_for('landing') }}#pricing" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-purple-600 hover:bg-gray-50">Pricing</a>
+        {% if current_user %}
+          <a href="{{ url_for('demo') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white gradient-bg">Go to Demo</a>
+          <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-md text-base font-medium text-purple-700">Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white gradient-bg">Log in</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-20">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-gray-900 text-white mt-16">
+    <div class="max-w-7xl mx-auto py-8 px-4 text-center text-gray-400">
+      &copy; {{ 2025 }} Structure Homes AI. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    (function(){
+      const btn = document.getElementById('mobile-menu-button');
+      const menu = document.getElementById('mobile-menu');
+      if (btn && menu) btn.addEventListener('click',()=>menu.classList.toggle('hidden'));
+    })();
+
+    // Live token refresh on demo/long pages
+    {% if current_user %}
+    async function refreshMe(){
+      try{
+        const r = await fetch("{{ url_for('api_me') }}");
+        if (!r.ok) return;
+        const j = await r.json();
+        const el = document.getElementById('tokens-remaining');
+        if (el) el.textContent = j.tokens_remaining;
+      }catch(e){}
+    }
+    // Refresh occasionally
+    setInterval(refreshMe, 4000);
+    {% endif %}
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

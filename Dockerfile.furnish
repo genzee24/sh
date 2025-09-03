@@ -1,0 +1,21 @@
+# Dockerfile.furnish — GPT furniture microservice (CPU)
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    Flask==3.0.0 \
+    Flask-Cors==4.0.0 \
+    python-dotenv==1.0.1 \
+    openai==1.40.0
+
+WORKDIR /app
+# put your furnish microservice file name here; e.g. furniture_service.py
+COPY furniture_service.py /app/furniture_service.py
+
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 5200
+CMD ["python", "/app/furniture_service.py"]

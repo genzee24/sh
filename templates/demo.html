@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Structure Homes Demo{% endblock %}
+
+{% block content %}
+
+
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,Roboto,Arial,sans-serif;margin:24px;background:#f8fafc;color:#0f172a}
+    .card{max-width:1200px;margin:auto;padding:16px;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 8px 30px rgba(2,8,23,.06);background:#fff}
+    .row{display:grid;grid-template-columns:1.15fr .85fr;gap:24px}.col{min-width:0}
+    #canvas{max-width:100%;border:1px dashed #cbd5e1;border-radius:8px;background:#fff}
+    #three-wrap{height:520px;border:1px dashed #cbd5e1;border-radius:12px;overflow:hidden;background:#e2e8f0}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer}
+    button:hover{background:#f8fafc}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .legend,.roomLegend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+    .tag{display:inline-flex;align-items:center;gap:6px;font-size:14px;background:#f1f5f9;padding:4px 8px;border-radius:999px}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    pre{background:#0b1020;color:#e2e8f0;padding:12px;border-radius:8px;max-height:260px;overflow:auto}
+    .warn{color:#b91c1c;font-size:13px;margin-top:6px;display:none}
+    .muted{color:#64748b}
+
+    /* Drag & drop + examples */
+    .uploader { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    .panel { border:1px solid #e5e7eb; border-radius:14px; padding:14px; background:#f8fafc }
+    .panel h4 { margin:0 0 8px 0; font-size:15px }
+    .panel .hint{font-size:13px;color:#64748b}
+
+    #dropzone{
+      border:2px dashed #94a3b8;border-radius:14px;padding:18px;text-align:center;background:#fff;
+      transition:all .15s ease; cursor:pointer
+    }
+    #dropzone:hover{ background:#f8fafc }
+    #dropzone.hover{ border-color:#2563eb; background:#eff6ff; box-shadow:0 6px 20px rgba(37,99,235,.10) }
+    #files{ display:none } /* hidden but accessible from JS */
+
+    .examples .btnbar { display:flex; gap:8px; flex-wrap:wrap }
+    .examples .exbtn { border:1px solid #dbeafe; background:#eff6ff; }
+    .examples .exbtn:hover { background:#e0efff }
+
+    /* Thumbnails (fixed size) */
+    #thumbs { margin-top:10px; display:grid; grid-template-columns: repeat(auto-fill, 130px); gap:10px; }
+    .thumb {
+      width:130px; height:130px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center; background:#fff; position:relative; cursor:pointer;
+    }
+    .thumb img { width:100%; height:100%; object-fit:cover; }
+    .thumb .badge {
+      position:absolute; left:6px; top:6px; background:#0f172a; color:#fff; font-size:11px; padding:2px 6px; border-radius:999px; opacity:.85
+    }
+    .thumb.active { outline:2px solid #2563eb; }
+    .userbar{
+      position:fixed; top:12px; right:12px; z-index:1000;
+      display:flex; align-items:center; gap:10px;
+      background:#ffffff; border:1px solid #e5e7eb; border-radius:9999px;
+      padding:6px 10px; box-shadow:0 6px 24px rgba(2,8,23,.08);
+    }
+    .user-pill{
+      display:inline-flex; align-items:center; gap:6px;
+      background:#eef2ff; color:#1e40af; border-radius:9999px;
+      padding:4px 10px; font-size:12px; font-weight:600;
+    }
+    .count-pill{
+      display:inline-flex; align-items:center; gap:6px;
+      background:#ecfeff; color:#155e75; border-radius:9999px;
+      padding:4px 10px; font-size:12px; font-weight:600;
+      border:1px solid #cffafe;
+    }
+    .userbar a{
+      color:#334155; text-decoration:none; font-size:12px; padding:4px 8px;
+      border:1px solid #e5e7eb; border-radius:10px;
+    }
+  </style>
+
+  <!-- Import maps -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.155.0/build/three.module.js"
+    }
+  }
+  </script>
+
+
+  <div class="card">
+    <h2 style="margin:6px 0 4px">Floor-Plan → 3-D</h2>
+    <p class="muted" style="margin-top:0">Upload • Detect • <b>Ask AI</b> • Build 3-D • <b>Open on Map</b></p>
+
+    <div class="uploader" style="margin-bottom:14px">
+      <!-- Drag & Drop -->
+      <div class="panel">
+        <h4>Upload images</h4>
+        <div id="dropzone">
+          <div class="title">Drop images here or click to browse</div>
+          <div class="hint">PNG / JPEG • multiple files supported</div>
+        </div>
+        <input id="files" type="file" accept="image/*" multiple />
+      </div>
+
+      <!-- Examples -->
+      <div class="panel examples">
+        <h4>…or choose an example</h4>
+        <div class="hint" style="margin-bottom:8px">Example 1 has 3 floors, Example 2 has 1 floor</div>
+        <div class="btnbar">
+          <button id="ex1" class="exbtn">Load Example 1 (3 floors)</button>
+          <button id="ex2" class="exbtn">Load Example 2 (1 floor)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnails (fixed size) -->
+    <div id="thumbs"></div>
+
+    <div class="btns" style="margin-top:14px">
+      <button id="run">Run Inference</button>
+      <button id="askgpt" disabled style="display:none;">Ask AI</button>
+      <button id="build3d" disabled>Build 3-D</button>
+      <button id="walk" disabled>Walk Mode</button>
+      <button id="fullscreen" disabled>Fullscreen</button>
+      <button id="openMap" disabled>Open on Map</button>
+    </div>
+
+    <div style="margin-top:10px">
+      Floor height (m) <input id="floorHeight" type="number" step="0.1" value="3.0" style="width:80px">
+      Slab (m) <input id="slabThick" type="number" step="0.05" value="0.30" style="width:80px">
+      <select id="floorSelect" disabled style="margin-left:8px"></select>
+    </div>
+
+    <div class="legend" style="margin-top:8px">
+      <span class="tag"><span class="dot" style="background:#2563eb"></span>wall</span>
+      <span class="tag"><span class="dot" style="background:#16a34a"></span>window</span>
+      <span class="tag"><span class="dot" style="background:#dc2626"></span>door</span>
+    </div>
+    <div id="roomLegend" class="roomLegend"></div>
+    <p id="meta" class="muted"></p>
+    <div id="three-warn" class="warn">⚠️ Three controls not loaded</div>
+
+    <div class="row" style="margin-top:16px">
+      <div class="col"><h3>Raw JSON</h3><pre id="out">{}</pre></div>
+      <div class="col"><h3>2-D / 3-D</h3><div id="three-wrap"></div><canvas id="canvas" style="margin-top:10px"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Module bridge: import modules and expose as globals for main.js -->
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "/static/js/OrbitControls.module.js";
+    import { PointerLockControls } from "/static/js/PointerLockControls.module.js";
+    import buildGroupFromFloors from "/static/js/house-builder.module.js";
+    window.THREE = THREE;
+    window.OrbitControls = OrbitControls;
+    window.PointerLockControls = PointerLockControls;
+    window.HouseBuilder = { buildGroupFromFloors };
+    window.dispatchEvent(new Event("three-ready"));
+  </script>
+
+
+<script>
+  // Provide a tiny helper so main.js (or the fetch wrapper below) can update the counter.
+  window.__setRemaining = function(n){
+    var el = document.getElementById('remaining-count');
+    if (el && typeof n === 'number' && isFinite(n)) el.textContent = n;
+  };
+
+  // Optional: automatically update the "remaining" badge whenever any JSON
+  // response includes a `remaining` number. This covers /predict calls.
+  (function(){
+    const origFetch = window.fetch;
+    window.fetch = async function(...args){
+      const res = await origFetch(...args);
+      try {
+        const clone = res.clone();
+        const ct = (clone.headers.get('content-type')||'').toLowerCase();
+        if (ct.includes('application/json')) {
+          const data = await clone.json();
+          if (data && typeof data.remaining === 'number') {
+            window.__setRemaining(data.remaining);
+          }
+        }
+      } catch(e) { /* ignore */ }
+      return res;
+    };
+  })();
+
+  window.addEventListener("three-ready", () => {
+    const s = document.createElement("script");
+    s.src = "/static/js/main.js";
+    document.body.appendChild(s);
+  });
+</script>
+
+
+{% endblock %}

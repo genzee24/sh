@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>House on Google Maps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,body {height:100%; margin:0}
+    #map {height:100%; width:100%}
+    .panel {
+      position:absolute; z-index:2; top:12px; left:12px;
+      background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+      padding:10px; box-shadow:0 2px 12px rgba(0,0,0,.08);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .panel input { width:130px; padding:6px; margin-right:6px }
+    .panel button { padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; background:#fff; cursor:pointer }
+  </style>
+
+  <!-- Import maps (CDN) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three/build/three.module.js",
+      "@googlemaps/three": "https://unpkg.com/@googlemaps/three/dist/index.esm.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="panel">
+    <label>Lat <input id="lat" type="number" step="0.000001" value="37.421955"></label>
+    <label>Lng <input id="lng" type="number" step="0.000001" value="-122.084058"></label>
+    <button id="buildOnMap">Build on Map</button>
+  </div>
+
+  <!-- Google Maps JS async loader (must include your vector Map ID) -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCorQJiXLi0dnoumNtBKjPphOFmLA0vX8A&v=beta&map_ids=9848c7c8b0244b3df052d590&loading=async">
+  </script>
+
+  <!-- Your ES-module map code -->
+  <script type="module" src="/static/js/map.esm.js"></script>
+</body>
+</html>

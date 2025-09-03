@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin • Users</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f8fafc;margin:24px}
+    a{color:#2563eb;text-decoration:none}
+    table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}
+    th,td{padding:10px;border-bottom:1px solid #e5e7eb}
+    th{background:#eef2ff;text-align:left}
+    .wrap{max-width:900px;margin:auto}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:16px}
+    input[type="text"],input[type="number"],input[type="password"]{padding:8px;border:1px solid #cbd5e1;border-radius:10px;width:100%}
+    label{font-size:13px;color:#334155}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+    .btn{padding:8px 12px;border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:10px;cursor:pointer}
+    .muted{color:#64748b}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .msg{color:#16a34a;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <a href="/">← Back to app</a>
+      </div>
+      <div class="muted">Admin panel</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, m in messages %}
+          <div class="msg">{{ m }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if edit_user %}
+      <h2>Edit user: {{ edit_user.username }}</h2>
+      <form method="post" class="card">
+        <div class="row">
+          <div>
+            <label>New password (leave blank to keep)</label>
+            <input type="password" name="password" autocomplete="new-password">
+          </div>
+          <div>
+            <label>Quota total</label>
+            <input type="number" name="quota_total" min="0" value="{{ edit_user.quota_total }}">
+          </div>
+          <div>
+            <label>Quota used</label>
+            <input type="number" name="quota_used" min="0" value="{{ edit_user.quota_used }}">
+          </div>
+          <div>
+            <label><input type="checkbox" name="is_admin" {% if edit_user.is_admin %}checked{% endif %}> Admin</label>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn" type="submit">Save</button>
+          <a href="{{ url_for('admin_users') }}" style="margin-left:10px">Cancel</a>
+        </div>
+      </form>
+    {% else %}
+      <h2>Users</h2>
+      <div class="card">
+        <table>
+          <tr>
+            <th>Username</th>
+            <th>Admin</th>
+            <th>Quota</th>
+            <th>Used</th>
+            <th>Remaining</th>
+            <th></th>
+          </tr>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ "yes" if u.is_admin else "no" }}</td>
+            <td>{{ u.quota_total }}</td>
+            <td>{{ u.quota_used }}</td>
+            <td>{{ 0, (u.quota_total or 0) - (u.quota_used or 0) }}</td>
+            <td><a href="{{ url_for('admin_user_edit', uid=u.id) }}">edit</a></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <h3 style="margin-top:18px">Add new user</h3>
+      <form method="post" class="card">
+        <div class="row">
+          <div>
+            <label>Username</label>
+            <input type="text" name="username" required>
+          </div>
+          <div>
+            <label>Password</label>
+            <input type="password" name="password" required autocomplete="new-password">
+          </div>
+          <div>
+            <label>Quota total</label>
+            <input type="number" name="quota_total" min="0" value="20">
+          </div>
+          <div>
+            <label><input type="checkbox" name="is_admin"> Admin</label>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn" type="submit">Create user</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

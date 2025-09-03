@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: floorplan-web
+    ports:
+      - "5000:5000"
+    environment:
+      # Where app.py will look for example images
+      IMAGES_DIR: /app/images
+      FLASK_ENV: production
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./weights:/app/weights:ro
+      - ./images:/app/images:ro
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+      # If you modify code frequently, mount the repo too:
+      # - .:/app
+    depends_on:
+      - furnish
+
+    # === GPU enable (optional) ===
+    # Uncomment this block if you built the GPU Dockerfile base and have NVIDIA drivers installed.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+    # device_requests:
+    #   - driver: nvidia
+    #     count: all
+    #     capabilities: ["gpu"]
+
+  furnish:
+    build:
+      context: .
+      dockerfile: Dockerfile.furnish
+    container_name: floorplan-furnish
+    ports:
+      - "5200:5200"
+    environment:
+      # put your key in .env or export before running compose
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+
+# Optional: add a simple bridge network (compose creates one automatically)
+# networks:
+#   default:
+#     name: floorplan-net

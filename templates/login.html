@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Log in · Structure Homes{% endblock %}
+{% block content %}
+<section class="py-24 bg-gray-50">
+  <div class="max-w-md mx-auto bg-white shadow rounded-xl p-8">
+    <h1 class="text-2xl font-bold mb-6 text-gray-900">Log in</h1>
+
+    {% with messages = get_flashed_messages(category_filter=["error"]) %}
+      {% if messages %}
+        <div class="mb-4 p-3 rounded bg-red-50 text-red-700 text-sm">
+          {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('login', next=request.args.get('next')) }}" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Username</label>
+        <input name="username" class="mt-1 w-full rounded-md border-gray-300 focus:ring-purple-500 focus:border-purple-500" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" name="password" class="mt-1 w-full rounded-md border-gray-300 focus:ring-purple-500 focus:border-purple-500" required />
+      </div>
+      <button class="w-full py-2 rounded-md text-white gradient-bg">Log in</button>
+    </form>
+
+    <!-- <div class="mt-6 text-sm text-gray-500">
+      Demo account: <b>griffin</b> / <b>griffin@123</b>
+    </div> -->
+  </div>
+</section>
+{% endblock %}
